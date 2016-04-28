@@ -15,6 +15,7 @@
 // Comments: BasilC#// (comment)
 // Loops: Basilc-loop(times)
 // Print: BasilC-say()
+// Set Printing Color: BasilC-tint(red)
 
 struct stack_node *root;
 struct stack_node *current_stack;
@@ -147,6 +148,25 @@ void parse_line(char *line, int line_len) {
         goto advance_stack;
     }
 
+    /* Check tint()
+	The tint() function changes the text color to one of 8 ANSI terminal
+	colors (TODO: add Bright versions of these colors)*/
+    if (line_len >= 11 && strncmp(line, "BasilC-tint(", 12) == 0) {
+        // Make sure arguments are closed
+        if (line[line_len-1] != ')') {
+            goto parse_fail;
+        }
+
+        // Add to stack
+        current_stack->command = "tint";
+        // If parameter is specified, add it
+        if (line_len > 13) {
+            strncpy(current_stack->parameters[0], line+12, line_len-12-1);
+        }
+
+        goto advance_stack;
+    }
+
     return;
 parse_fail:
     fprintf(stderr, "Invalid command: %s\n", line);
@@ -169,6 +189,34 @@ void stack_execute() {
         if (strcmp(cur->command, "say") == 0) {
             char *temp = cur->parameters[0];
             printf("%s\n", temp);
+            goto loop_next;
+        }
+
+        // tint()
+        if (strcmp(cur->command, "tint") == 0) {
+            char *temp = cur->parameters[0];
+            /* prints ANSI escape code to allow the following BasilC-say
+            statement to be in the corresponding color */
+            if (strcmp(temp, "black") == 0)
+                printf("\033[30m");
+            else if (strcmp(temp, "red") == 0)
+                printf("\033[31m");
+            else if (strcmp(temp, "green") == 0)
+                printf("\033[32m");
+            else if (strcmp(temp, "yellow") == 0)
+                printf("\033[33m");
+            else if (strcmp(temp, "blue") == 0)
+                printf("\033[34m");
+            else if (strcmp(temp, "magenta") == 0)
+                printf("\033[35m");
+            else if (strcmp(temp, "cyan") == 0)
+                printf("\033[36m");
+            else if (strcmp(temp, "white") == 0)
+                printf("\033[37m");
+            /* if the colour is not one of the available options, reset
+            terminal to default color state */
+            else
+                printf("\033[0m");
             goto loop_next;
         }
 
