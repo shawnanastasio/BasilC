@@ -55,7 +55,6 @@ int main(int argc, char **argv) {
     // Fill buffer
     if (fp) {
         fseek(fp, 0, SEEK_SET);
-        //size_t newLen = fread(buffer, 1, chars, fp)
         buffer = malloc(chars+1);
         if (buffer) {
             fread (buffer, 1, chars, fp);
@@ -75,8 +74,6 @@ int main(int argc, char **argv) {
     for (int i=0; i<lines; i++) {
         // Get line length
         while (buffer[pos+line_len] && buffer[pos+line_len] != '\n') {
-            //printf("PARSED: %c\n", buffer[line_len]);
-            //isBeginningOfLine = !isBeginningOfLine;
             ++line_len;
         }
 
@@ -144,8 +141,7 @@ void parse_line(char *line, int line_len) {
         current_stack->command = "say";
         // If parameter is specified, add it
         if (line_len > 12) {
-            char* kek = &(current_stack->parameters[0][0]);
-            strncpy(kek, line+11, line_len-11-1);
+            strncpy(current_stack->parameters[0], line+11, line_len-11-1);
         }
 
         goto advance_stack;
@@ -171,8 +167,7 @@ void stack_execute() {
 
         // say()
         if (strcmp(cur->command, "say") == 0) {
-            //printf("DEBUG: SAY CALLED!\n");
-            char *temp = &(cur->parameters[0][0]);
+            char *temp = cur->parameters[0];
             printf("%s\n", temp);
             goto loop_next;
         }
