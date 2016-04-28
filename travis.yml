@@ -1,0 +1,3 @@
+language: c
+compiler: gcc
+script: gcc -std=c99 main.c -o basilc
