@@ -167,6 +167,45 @@ void parse_line(char *line, int line_len) {
         goto advance_stack;
     }
 
+    // Check label()
+    if (line_len >= 13 && strncmp(line, "BasilC-label(", 13) == 0) {
+        // Make sure arguments are closed
+        if (line[line_len-1] != ')') {
+            goto parse_fail;
+        }
+
+        // Add to stack
+        current_stack->command = "label";
+        // If parameter is specified, add it
+        if (line_len > 14) {
+            strncpy(current_stack->parameters[0], line+13, line_len-13-1);
+        } else {
+            goto parse_fail;
+        }
+
+        goto advance_stack;
+    }
+
+    // Check goto()
+    if (line_len >= 11 && strncmp(line, "BasilC-goto(", 12) == 0) {
+        // Make sure arguments are closed
+        if (line[line_len-1] != ')') {
+            goto parse_fail;
+        }
+
+        // Add to stack
+        current_stack->command = "goto";
+        // If parameter is specified, add it
+        if (line_len > 13) {
+            strncpy(current_stack->parameters[0], line+12, line_len-12-1);
+        } else {
+            goto parse_fail;
+        }
+
+        goto advance_stack;
+    }
+
+
     return;
 parse_fail:
     fprintf(stderr, "Invalid command: %s\n", line);
@@ -213,14 +252,46 @@ void stack_execute() {
                 printf("\033[36m");
             else if (strcmp(temp, "white") == 0)
                 printf("\033[37m");
-            /* if the colour is not one of the available options, reset
+            /* if the color is not one of the available options, reset
             terminal to default color state */
             else
                 printf("\033[0m");
             goto loop_next;
         }
 
+        // goto()
+        if (strcmp(cur->command, "goto") == 0) {
+            char *temp = cur->parameters[0];
+            struct stack_node *label = stack_search_label(temp);
+            if (label != NULL) {
+                cur = label;
+                goto loop_skip;
+            }
+        }
+
     loop_next:
         cur = cur->next;
+
+    loop_skip:
+        cur = cur; // Make C compiler happy
     }
+}
+
+/**
+ * Search for label in stack
+ * @param  label name of label
+ * @return pointer to stack node with label, or NULL if label isn't found
+ */
+stack_node * stack_search_label(char *label) {
+    struct stack_node *cur = root;
+    while (cur != NULL) {
+        if (strcmp(cur->command, "label") == 0) {
+            char *temp = cur->parameters[0];
+            if (strcmp(temp, label) == 0) {
+                return cur;
+            }
+        }
+    }
+
+    return NULL;
 }
