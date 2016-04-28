@@ -9,6 +9,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "main.h"
 
@@ -16,6 +17,9 @@
 // Loops: Basilc-loop(times)
 // Print: BasilC-say()
 // Set Printing Color: BasilC-tint(red)
+// Label/Goto: BasilC-label(name), BasilC-goto(name)
+// Sleep: BasilC-naptime(sec)
+// System: BasilC-yolo(command)
 
 struct stack_node *root;
 struct stack_node *current_stack;
@@ -141,7 +145,7 @@ void parse_line(char *line, int line_len) {
         // Add to stack
         current_stack->command = "say";
         // If parameter is specified, add it
-        if (line_len > 12) {
+        if (line_len > 11+1) {
             strncpy(current_stack->parameters[0], line+11, line_len-11-1);
         }
 
@@ -151,7 +155,7 @@ void parse_line(char *line, int line_len) {
     /* Check tint()
 	The tint() function changes the text color to one of 8 ANSI terminal
 	colors (TODO: add Bright versions of these colors)*/
-    if (line_len >= 11 && strncmp(line, "BasilC-tint(", 12) == 0) {
+    if (line_len >= 12 && strncmp(line, "BasilC-tint(", 12) == 0) {
         // Make sure arguments are closed
         if (line[line_len-1] != ')') {
             goto parse_fail;
@@ -160,7 +164,7 @@ void parse_line(char *line, int line_len) {
         // Add to stack
         current_stack->command = "tint";
         // If parameter is specified, add it
-        if (line_len > 13) {
+        if (line_len > 12+1) {
             strncpy(current_stack->parameters[0], line+12, line_len-12-1);
         }
 
@@ -177,7 +181,7 @@ void parse_line(char *line, int line_len) {
         // Add to stack
         current_stack->command = "label";
         // If parameter is specified, add it
-        if (line_len > 14) {
+        if (line_len > 13+1) {
             strncpy(current_stack->parameters[0], line+13, line_len-13-1);
         } else {
             goto parse_fail;
@@ -187,7 +191,7 @@ void parse_line(char *line, int line_len) {
     }
 
     // Check goto()
-    if (line_len >= 11 && strncmp(line, "BasilC-goto(", 12) == 0) {
+    if (line_len >= 12 && strncmp(line, "BasilC-goto(", 12) == 0) {
         // Make sure arguments are closed
         if (line[line_len-1] != ')') {
             goto parse_fail;
@@ -196,8 +200,46 @@ void parse_line(char *line, int line_len) {
         // Add to stack
         current_stack->command = "goto";
         // If parameter is specified, add it
-        if (line_len > 13) {
+        if (line_len > 12+1) {
             strncpy(current_stack->parameters[0], line+12, line_len-12-1);
+        } else {
+            goto parse_fail;
+        }
+
+        goto advance_stack;
+    }
+
+    // Check yolo()
+    if (line_len >= 12 && strncmp(line, "BasilC-yolo(", 12) == 0) {
+        // Make sure arguments are closed
+        if (line[line_len-1] != ')') {
+            goto parse_fail;
+        }
+
+        // Add to stack
+        current_stack->command = "yolo";
+        // If parameter is specified, add it
+        if (line_len > 12+1) {
+            strncpy(current_stack->parameters[0], line+12, line_len-12-1);
+        } else {
+            goto parse_fail;
+        }
+
+        goto advance_stack;
+    }
+
+    // Check naptime()
+    if (line_len >= 15 && strncmp(line, "BasilC-naptime(", 15) == 0) {
+        // Make sure arguments are closed
+        if (line[line_len-1] != ')') {
+            goto parse_fail;
+        }
+
+        // Add to stack
+        current_stack->command = "naptime";
+        // If parameter is specified, add it
+        if (line_len > 15+1) {
+            strncpy(current_stack->parameters[0], line+15, line_len-15-1);
         } else {
             goto parse_fail;
         }
@@ -269,6 +311,20 @@ void stack_execute() {
             }
         }
 
+        // yolo()
+        if (strcmp(cur->command, "yolo") == 0) {
+            char *temp = cur->parameters[0];
+            system(temp);
+            goto loop_next;
+        }
+
+        // naptime()
+        if (strcmp(cur->command, "naptime") == 0) {
+            char *temp = cur->parameters[0];
+            sleep(atoi(temp));
+            goto loop_next;
+        }
+
     loop_next:
         cur = cur->next;
 
@@ -286,7 +342,7 @@ stack_node * stack_search_label(char *label) {
     struct stack_node *cur = root;
     while (cur != NULL) {
         if (cur->command == NULL) break;
-        
+
         if (strcmp(cur->command, "label") == 0) {
             char *temp = cur->parameters[0];
             if (strcmp(temp, label) == 0) {
