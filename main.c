@@ -285,12 +285,15 @@ void stack_execute() {
 stack_node * stack_search_label(char *label) {
     struct stack_node *cur = root;
     while (cur != NULL) {
+        if (cur->command == NULL) break;
+        
         if (strcmp(cur->command, "label") == 0) {
             char *temp = cur->parameters[0];
             if (strcmp(temp, label) == 0) {
                 return cur;
             }
         }
+        cur = cur->next;
     }
 
     return NULL;
