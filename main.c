@@ -88,7 +88,7 @@ int main(int argc, char **argv) {
         strncpy(temp, buffer+pos, line_len);
 
         // Parse line
-        parse_line(temp, line_len);
+        parse_line(temp, line_len, i+1);
 
         // Update position and reset line_len
         pos += line_len;
@@ -112,7 +112,7 @@ void stack_node_initialize(struct stack_node *s) {
 }
 
 // Parse line of code
-void parse_line(char *line, int line_len) {
+void parse_line(char *line, int line_len, int linenum) {
     // Remove trailing \n
     if (line[--line_len] == '\n') line[line_len] = '\0';
 
@@ -248,9 +248,10 @@ void parse_line(char *line, int line_len) {
     }
 
 
-    return;
 parse_fail:
-    fprintf(stderr, "Invalid command: %s\n", line);
+    fprintf(stderr, "Invalid command\n");
+    fprintf(stderr, "At line %d: %s\n", linenum, line);
+    exit(1);
     return;
 
 advance_stack:

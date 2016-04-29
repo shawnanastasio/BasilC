@@ -13,6 +13,6 @@ struct stack_node {
 typedef struct stack_node stack_node;
 
 void stack_node_initialize(struct stack_node *s);
-void parse_line(char *line, int line_len);
+void parse_line(char *line, int line_len, int linenum);
 void stack_execute();
 stack_node * stack_search_label(char *label);
