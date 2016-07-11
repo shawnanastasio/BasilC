@@ -133,6 +133,9 @@ void parse_line(char *line, int32_t line_len, int32_t linenum) {
     //printf("PARSE LINE: %s\n", line);
     //printf("line_len: %d\n", line_len);
 
+    //ignore shebang lines
+    if (line[0]=='#') return;
+
     // Parse line of code
     if (line_len <= 6) {
         // All BasilC code is prefixed with "BasilC"; line length must be > 6
@@ -479,9 +482,7 @@ int32_t str_index_of(char *str, char c) {
 }
 
 void exit_with_error(char *error) {
-    fprintf(stderr, "[error] ");
-    fprintf(stderr, error);
-    fprintf(stderr, "\n");
+    fprintf(stderr, "[error] %s\n", error);
     exit(1);
 }
 
