@@ -20,19 +20,26 @@
 // Label/Goto: BasilC-label(name), BasilC-goto(name)
 // Sleep: BasilC-naptime(sec)
 // System: BasilC-yolo(command)
+// If: BasilC-if(condition)
+// Endif: BasilC-endif()
 
-struct stack_node *root;
-struct stack_node *current_stack;
+stack_node_t *root;
+stack_node_t *current_stack;
 
-int main(int argc, char **argv) {
+bool in_block;
+
+int32_t main(int32_t argc, char **argv) {
     // Verify arguments
     if (argc != 2) {
         printf("Usage: %s <script.basilc>\n", argv[0]);
         return 1;
     }
 
+    // Set global variables
+    in_block = false;
+
     // Create initial stack
-    root = (struct stack_node *) malloc(sizeof(struct stack_node));
+    root = (stack_node_t *) malloc(sizeof(stack_node_t));
     current_stack = root;
     stack_node_initialize(root);
 
@@ -43,8 +50,8 @@ int main(int argc, char **argv) {
         perror("Error");
         return 1;
     }
-    int lines = 0;
-    int chars = 0;
+    int32_t lines = 0;
+    int32_t chars = 0;
 
     // Count lines and chars
     char cur_char = 0;
@@ -74,9 +81,9 @@ int main(int argc, char **argv) {
     // Begin parsing
     cur_char = 0;
 
-    int line_len = 0;
-    int pos = 0;
-    for (int i=0; i<lines; i++) {
+    int32_t line_len = 0;
+    int32_t pos = 0;
+    for (int32_t i=0; i<lines; i++) {
         // Get line length
         while (buffer[pos+line_len] && buffer[pos+line_len] != '\n') {
             ++line_len;
@@ -96,15 +103,19 @@ int main(int argc, char **argv) {
 
     }
 
+    // Cleanup and run final parsing checks
+    parse_cleanup();
+
     // Execute stack
     stack_execute();
 }
 
 // Intialize an empty stack node
-void stack_node_initialize(struct stack_node *s) {
+void stack_node_initialize(stack_node_t *s) {
     s->command = NULL;
-    for (int i=0; i<STACK_PARAMETER_MAX_AMOUNT; i++) {
-        for (int z=0; z<STACK_PARAMETER_MAX_LENGTH; z++) {
+    s->execute = true;
+    for (int32_t i=0; i<STACK_PARAMETER_MAX_AMOUNT; i++) {
+        for (int32_t z=0; z<STACK_PARAMETER_MAX_LENGTH; z++) {
             s->parameters[i][z] = 0;
         }
     }
@@ -112,7 +123,7 @@ void stack_node_initialize(struct stack_node *s) {
 }
 
 // Parse line of code
-void parse_line(char *line, int line_len, int linenum) {
+void parse_line(char *line, int32_t line_len, int32_t linenum) {
     // Remove trailing \n
     if (line[--line_len] == '\n') line[line_len] = '\0';
 
@@ -152,9 +163,11 @@ void parse_line(char *line, int line_len, int linenum) {
         goto advance_stack;
     }
 
-    /* Check tint()
-	The tint() function changes the text color to one of 8 ANSI terminal
-	colors (TODO: add Bright versions of these colors)*/
+    /*
+     * Check tint()
+	 * The tint() function changes the text color to one of 8 ANSI terminal
+	 * colors (TODO: add Bright versions of these colors)
+	 */
     if (line_len >= 12 && strncmp(line, "BasilC-tint(", 12) == 0) {
         // Make sure arguments are closed
         if (line[line_len-1] != ')') {
@@ -247,6 +260,37 @@ void parse_line(char *line, int line_len, int linenum) {
         goto advance_stack;
     }
 
+    // Check if()
+    if (line_len >= 10 && strncmp(line, "BasilC-if(", 10) == 0) {
+        // Make sure arguments are closed
+        if (line[line_len-1] != ')') {
+            goto parse_fail;
+        }
+
+        // Add to stack
+        current_stack->command = "if";
+        // Store condition in parameters
+        if (line_len > 10+1) {
+            strncpy(current_stack->parameters[0], line+10, line_len-10-1);
+            // Mark start of code block
+            in_block = true;
+        } else {
+            goto parse_fail;
+        }
+
+        goto advance_stack;
+    }
+
+    // Check endif()
+    if (line_len == 14 && strncmp(line, "BasilC-endif()", 14) == 0) {
+        if (in_block) {
+            in_block = false;
+            current_stack->command = "endif";
+        }
+        else goto parse_fail;
+
+        goto advance_stack;
+    }
 
 parse_fail:
     fprintf(stderr, "Invalid command\n");
@@ -255,17 +299,29 @@ parse_fail:
     return;
 
 advance_stack:
-    current_stack->next = malloc(sizeof(struct stack_node));
+    if (strncmp(current_stack->command, "if", 2) != 0)
+        current_stack->execute = !in_block;
+    current_stack->next = malloc(sizeof(stack_node_t));
     stack_node_initialize(current_stack->next);
     current_stack = current_stack->next;
     return;
 }
 
+void parse_cleanup() {
+    // Check for unclosed if statement blocks
+    if (in_block) {
+        exit_with_error("Unclosed if statement!");
+    }
+}
+
 void stack_execute() {
-    struct stack_node *cur = root;
+    stack_node_t *cur = root;
     while (cur != NULL) {
         // Handle commands
         if (cur->command == NULL) goto loop_next;
+
+        // Handle nodes marked as "don't execute"
+        if (cur->execute == false) goto loop_next;
 
         // say()
         if (strcmp(cur->command, "say") == 0) {
@@ -305,7 +361,7 @@ void stack_execute() {
         // goto()
         if (strcmp(cur->command, "goto") == 0) {
             char *temp = cur->parameters[0];
-            struct stack_node *label = stack_search_label(temp);
+            stack_node_t *label = stack_search_label(temp);
             if (label != NULL) {
                 cur = label;
                 goto loop_skip;
@@ -326,6 +382,17 @@ void stack_execute() {
             goto loop_next;
         }
 
+        // if()
+        if (strcmp(cur->command, "if") == 0) {
+            char *temp = cur->parameters[0];
+            bool cond = eval_conditional(temp);
+            //printf("[debug] Conditional evaluated to: %d\n", (int8_t)cond);
+            // If condition is true, mark all commands in block as execute
+            if (cond)
+                set_block_execute(cur, true);
+            goto loop_next;
+        }
+
     loop_next:
         cur = cur->next;
 
@@ -339,8 +406,8 @@ void stack_execute() {
  * @param  label name of label
  * @return pointer to stack node with label, or NULL if label isn't found
  */
-stack_node * stack_search_label(char *label) {
-    struct stack_node *cur = root;
+stack_node_t * stack_search_label(char *label) {
+    stack_node_t *cur = root;
     while (cur != NULL) {
         if (cur->command == NULL) break;
 
@@ -354,4 +421,90 @@ stack_node * stack_search_label(char *label) {
     }
 
     return NULL;
+}
+
+void set_block_execute(stack_node_t *cur, bool val) {
+    while (cur != NULL) {
+        if (cur->command == NULL) break;
+        if (strncmp(cur->command, "endif", 5) == 0) break;
+
+        cur->execute = val;
+        cur = cur->next;
+    }
+}
+
+bool eval_conditional(char *cond) {
+    // Determine sign
+    char sign = '\0';
+    if (str_index_of(cond, '=') > -1) {
+        sign = '=';
+    } else if (str_index_of(cond, '>') > -1) {
+        sign = '>';
+    } else if (str_index_of(cond, '<') > -1) {
+        sign = '<';
+    } else {
+        exit_with_error("Invalid conditional!");
+    }
+
+    // Determine parameters
+    char param_1[strlen(cond)];
+    char param_2[strlen(cond)];
+    if (split_string_delimiter(param_1, cond, ' ') <= -1) {
+        exit_with_error("Invalid conditional!");
+    } else if (split_string_delimiter_rev(param_2, cond, ' ') <= -1) {
+        exit_with_error("Invalid conditional!");
+    }
+
+    // Evaluate
+    if (sign == '=') {
+        if (atoi(param_1) == atoi(param_2)) return true;
+        return false;
+    } else if (sign == '>') {
+        if (atoi(param_1) > atoi(param_2)) return true;
+        return false;
+    } else if (sign == '<') {
+        if (atoi(param_1) < atoi(param_2)) return true;
+        return false;
+    } else {
+        exit_with_error("Invalid conditional!");
+    }
+}
+
+int32_t str_index_of(char *str, char c) {
+    int32_t i = 0;
+    for (i=0; i<strlen(str); i++) {
+        if (str[i] == c) return i;
+    }
+    return -1;
+}
+
+void exit_with_error(char *error) {
+    fprintf(stderr, "[error] ");
+    fprintf(stderr, error);
+    fprintf(stderr, "\n");
+    exit(1);
+}
+
+/**
+ * Returns the all chars in a string up until `delim` into `buf`
+ */
+int32_t split_string_delimiter(char *buf, char *str, char delim) {
+    int32_t delim_pos = str_index_of(str, delim);
+    if (delim_pos <= -1) return -1;
+    strncpy(buf, str, delim_pos);
+    return 0;
+}
+
+int32_t split_string_delimiter_rev(char *buf, char *str, char delim) {
+    int32_t last_delim_pos = -1;
+    int32_t i;
+    for (i=0; i<strlen(str); i++) {
+        if (str[i] == delim) last_delim_pos = i;
+    }
+    if (last_delim_pos <= -1) return -1;
+
+    for (i=0; i<strlen(str) - last_delim_pos - 1; i++) {
+        buf[i] = str[strlen(str)-i-1];
+    }
+    return 0;
 }
