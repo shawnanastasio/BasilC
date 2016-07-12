@@ -9,7 +9,7 @@ BasilC introduces the new programming paradigm of procedural non-typed languages
 Quick start
 -----------
 
-Since The BasilC Interpreter is written in pure C, it can be compiled with 0 dependencies on nearly any platform with a C compiler.
+Since The BasilC interpreter is written in pure C, it can be compiled with 0 dependencies on nearly any platform with a C compiler.
 
 To compile on UNIX-like systems with GNU Make, simply run:
 ```
@@ -35,8 +35,10 @@ $ ./helloworld.basilc
 Technical Explanation
 ---------------------
 The BasilC interpreter is written in 100% C in order to provide fast run times and portability
-across nearly all POSIX platforms, and even windows. BasilC abstains from traditional programming
-paradigms and puts the static vs dynamically typed variable debate to an end once and for all.
+across nearly all POSIX platforms, and even Windows.
+
+_BasilC abstains from traditional programming paradigms and puts the static vs dynamically typed variable debate to an end once and for all._
+
 All variables in BasilC are stored internally as char literals. This provides enhanced flexibility
-for all types of data. Type-dependent operations, such as arithmetic, can still be performed and
-leverage C's powerful casting system on a per-function basis.
+for all types of data, while still allowing for type-dependent operations, such as arithmetic, that
+can still be performed by leveraging C's powerful casting system on a per-function basis.
