@@ -1,4 +1,4 @@
-#!/usr/local/bin/basilc
+#!/usr/bin/env basilc
 BasilC#// Hello World program implemented in BasilC
 
 BasilC-say(Hello, World!)
