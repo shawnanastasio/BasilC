@@ -458,6 +458,15 @@ void stack_execute() {
             char *var_name = cur->parameters[0];
             char *var_data = cur->parameters[1];
 
+            // Check if variable already exists
+            variable_stack_node_t *var = var_stack_search_label(var_name);
+            if (var != NULL) {
+                // Redefine variable
+                memset(var->data, '\0', MAX_DATA_SIZE);
+                strcpy(var->data, var_data);
+                goto loop_next;
+            }
+
             // Add to variable stack
             strcpy(current_var_stack->name, var_name);
             strcpy(current_var_stack->data, var_data);
@@ -504,6 +513,25 @@ stack_node_t * stack_search_label(char *label) {
             if (strcmp(temp, label) == 0) {
                 return cur;
             }
+        }
+        cur = cur->next;
+    }
+
+    return NULL;
+}
+
+/**
+ * Search for variable name in variable stack
+ * @param  label name of variable
+ * @return pointer to var stack node with name, or NULL if name isn't found
+ */
+variable_stack_node_t * var_stack_search_label(char *label) {
+    variable_stack_node_t *cur = root_var;
+    while (cur != NULL) {
+        if (cur->name == NULL) break;
+
+        if (strcmp(cur->name, label) == 0) {
+            return cur;
         }
         cur = cur->next;
     }
@@ -567,7 +595,7 @@ char * get_data_for_var(char *var_name) {
     variable_stack_node_t *cur = root_var;
     while (cur != NULL) {
         if (strcmp(cur->name, var_name) == 0) {
-            return cur->name;
+            return cur->data;
         }
         cur = cur->next;
     }

@@ -29,6 +29,7 @@ void parse_line(char *line, int line_len, int linenum);
 void stack_execute();
 void parse_cleanup();
 stack_node_t * stack_search_label(char *label);
+variable_stack_node_t * var_stack_search_label(char *label);
 void set_block_execute(stack_node_t *start, bool val);
 bool eval_conditional(char *cond);
 void exit_with_error(char *error);
