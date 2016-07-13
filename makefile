@@ -17,7 +17,7 @@ BasilC: $(DEPS)
 	$(CC) -o $(OUTDIR)/basilc $(DEPS) $(SRCDIR)/main.c $(CFLAGS) -I$(INCLUDEDIR)
 
 %.o: %.c
-	$(CC) -c $< -o $@ $(CFLAGS) -I$(INCLUDEDIR)
+	$(CC) -o $@ $(CFLAGS) -c $< -I$(INCLUDEDIR)
 
 .PHONY: clean
 clean:
