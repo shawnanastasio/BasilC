@@ -11,7 +11,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "main.h"
+#include <main.h>
 
 // Comments: BasilC#// (comment)
 // Loops: Basilc-loop(times)
@@ -22,6 +22,7 @@
 // System: BasilC-yolo(command)
 // If: BasilC-if(condition)
 // Endif: BasilC-endif()
+// Define variables: BasilC-define(var_name, var_data)
 
 stack_node_t *root;
 stack_node_t *current_stack;

@@ -1,28 +1,35 @@
 SHELL=/bin/sh
 CC=gcc
-CFLAGS=-std=c99.
-DEPS=main.h
+CFLAGS=-std=c99
 PREFIX=/usr/local
+SRCDIR=src
+INCLUDEDIR=include
+OUTDIR=out
+DEPS=
 
-%.o: %.c $(DEPS)
-	$(CC) -c -o $@ $< $(CFLAGS)
+.PHONY: all
+all: pre-build BasilC
 
-BasilC: main.c
-	$(CC) -o basilc main.c -std=c99
+pre-build:
+	if [ ! -d out ]; then mkdir out; fi
+
+BasilC: $(DEPS)
+	$(CC) -o $(OUTDIR)/basilc $(DEPS) $(SRCDIR)/main.c $(CFLAGS) -I$(INCLUDEDIR)
+
+%.o: %.c
+	$(CC) -c $< -o $@ $(CFLAGS) -I$(INCLUDEDIR)
+
+.PHONY: clean
+clean:
+	rm -rf out/ $(DEPS)
 
 .PHONY: install
-install: basilc
+install: BasilC
 	mkdir -p $(DESTDIR)$(PREFIX)/bin
 	cp $< $(DESTDIR)$(PREFIX)/bin/basilc
 	@echo Finished Installing!
-	@echo
-	@echo If you wish to run basilc programs with the command \"basilc\", set the environment variable \"basilc\" to \"/usr/local/bin/basilc\"!
-	@echo
 
 .PHONY: uninstall
 uninstall:
 	rm -f $(DESTDIR)$(PREFIX)/bin/basilc
 	@echo Finished Uninstalling!
-	@echo
-	@echo If you have set the \"basilc\" environment variable during installation, you may wish to remove that!
-	@echo
