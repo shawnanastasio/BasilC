@@ -344,6 +344,38 @@ void parse_line(char *line, int32_t line_len, int32_t linenum) {
         goto advance_stack;
     }
 
+    // Check end()
+    if (strcmp(line, "BasilC-end()") == 0) {
+        current_stack->command = "end";
+        goto advance_stack;
+    }
+
+    // Check ask()
+    if (line_len >= 11 && strncmp(line, "BasilC-ask(", 11) == 0) {
+        // Make sure arguments are closed
+        if (line[line_len-1] != ')') {
+            goto parse_fail;
+        }
+
+        // Add to stack
+        current_stack->command = "ask";
+         if (line_len > 12){
+            int32_t comma = str_index_of(line, ",");
+            if (comma < 12) {
+                goto parse_fail;
+            }
+
+            //printf("line_len: %d\ncomma: %d\n", line_len, comma);
+
+            strncpy(current_stack->parameters[0], line+11, comma-11);
+            strncpy(current_stack->parameters[1], line+comma+2, line_len-comma-3);
+            goto advance_stack;
+        }
+        else {
+            goto parse_fail;
+        }
+    }
+
 parse_fail:
     fprintf(stderr, "Invalid command\n");
     fprintf(stderr, "At line %d: %s\n", linenum, line);
@@ -497,6 +529,21 @@ void stack_execute() {
             }
             printf("null\n");
             goto loop_next;
+        }
+        // end()
+        if (strcmp(cur->command, "end") == 0){
+            return;
+        }
+
+        // ask()
+        if (strcmp(cur->command, "ask") == 0){
+            variable_stack_node_t *temp_var = var_stack_search_label(cur->parameters[1]);
+            if (temp_var != NULL){
+                printf("%s", cur->parameters[0]);
+                fgets(temp_var->data, 70, stdin);
+                temp_var->data[strlen(temp_var->data)-1] = '\0'; //screw newlines
+            }
+            else printf("Variable %s has not been declared!", cur->parameters[0]);
         }
 
     loop_next:
