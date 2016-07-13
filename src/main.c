@@ -462,7 +462,6 @@ void stack_execute() {
             variable_stack_node_t *var = var_stack_search_label(var_name);
             if (var != NULL) {
                 // Redefine variable
-                memset(var->data, '\0', MAX_DATA_SIZE);
                 strcpy(var->data, var_data);
                 goto loop_next;
             }
