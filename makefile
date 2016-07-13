@@ -5,7 +5,7 @@ PREFIX=/usr/local
 SRCDIR=src
 INCLUDEDIR=include
 OUTDIR=out
-DEPS=
+DEPS=$(SRCDIR)/stringhelpers.o
 
 .PHONY: all
 all: pre-build BasilC
