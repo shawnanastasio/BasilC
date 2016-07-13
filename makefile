@@ -26,7 +26,7 @@ clean:
 .PHONY: install
 install: BasilC
 	mkdir -p $(DESTDIR)$(PREFIX)/bin
-	cp $< $(DESTDIR)$(PREFIX)/bin/basilc
+	cp $(OUTDIR)/basilc $(DESTDIR)$(PREFIX)/bin/basilc
 	@echo Finished Installing!
 
 .PHONY: uninstall
