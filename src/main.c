@@ -445,8 +445,18 @@ void stack_execute() {
         // if()
         if (strcmp(cur->command, "if") == 0) {
             char *temp = cur->parameters[0];
-            bool cond = eval_conditional(temp);
-            //printf("[debug] Conditional evaluated to: %d\n", (int8_t)cond);
+            bool cond;
+
+            // Try to parse variables in string
+            char *parsed = parse_var_string(temp);
+            if (parsed != NULL) {
+                // If variables were parsed successfully
+                cond = eval_conditional(parsed);
+                free(parsed);
+            } else {
+                cond = eval_conditional(temp);
+            }
+
             // If condition is true, mark all commands in block as execute
             if (cond)
                 set_block_execute(cur, true);
