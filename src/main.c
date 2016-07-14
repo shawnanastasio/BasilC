@@ -48,11 +48,11 @@ int32_t main(int32_t argc, char **argv) {
     in_block = false;
 
     // Check parameters
-    extern int optind;
-    int c;
+    int32_t c;
+    int32_t counter = 0;
 
-    while ((c = getopt(argc, argv, "md")) != -1)
-    switch (c){
+    while ((c = find_option(argc, argv, "md", &counter)) != -1)
+    switch (c) {
         case 'm':
             monochrome_mode = true; //don't output ANSI color codes
             break;
@@ -72,7 +72,7 @@ int32_t main(int32_t argc, char **argv) {
 
     // Open script file
     FILE *fp;
-    fp = fopen(argv[optind], "r");
+    fp = fopen(argv[argc-1], "r");
     if (fp == NULL) {
         perror("Error");
         return 1;

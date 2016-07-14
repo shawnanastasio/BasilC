@@ -99,3 +99,22 @@ int32_t str_index_of_skip(char *str, char *c, int32_t skip) {
     }
     return -1;
 }
+
+/**
+ * Parse program arguments. Functions similar to getopt
+ */
+int32_t find_option(int argc, char **argv, char *request, int32_t *counter) {
+    int32_t req_len = strlen(request);
+    int32_t i;
+    for (; *counter<argc; (*counter)++) {
+        if (argv[*counter][0] != '-') continue;
+
+        for (i=0; i<req_len; i++) {
+            if (argv[*counter][1] == request[i]) {
+                    (*counter)++;
+                    return request[i];
+            }
+        }
+    }
+    return -1;
+}
