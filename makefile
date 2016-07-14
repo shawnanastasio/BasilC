@@ -26,14 +26,14 @@ clean:
 
 .PHONY: install
 install: BasilC
-    mkdir -p $(DESTDIR)$(PREFIX)/bin
-    mkdir -p $(DESTDIR)$(PREFIX)/man/man1
-    cp $(OUTDIR)/basilc $(DESTDIR)$(PREFIX)/bin/basilc
-    cp $(MANDIR)/basilc.1 $(DESTDIR)$(PREFIX)/man/man1/basilc.1
-    @echo Finished Installing!
+	mkdir -p $(DESTDIR)$(PREFIX)/bin
+	mkdir -p $(DESTDIR)$(PREFIX)/man/man1
+	cp $(OUTDIR)/basilc $(DESTDIR)$(PREFIX)/bin/basilc
+	cp $(MANDIR)/basilc.1 $(DESTDIR)$(PREFIX)/man/man1/basilc.1
+	@echo Finished Installing!
 
 .PHONY: uninstall
 uninstall:
-    rm -f $(DESTDIR)$(PREFIX)/bin/basilc
-    rm -f $(DESTDIR)$(PREFIX)/man/man1/basilc.1
-    @echo Finished Uninstalling!
+	rm -f $(DESTDIR)$(PREFIX)/bin/basilc
+	rm -f $(DESTDIR)$(PREFIX)/man/man1/basilc.1
+	@echo Finished Uninstalling!
