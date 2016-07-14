@@ -10,12 +10,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <getopt.h>
 
 #include <main.h>
 #include <stringhelpers.h>
 
 // Comments: BasilC#// (comment)
-// Loops: Basilc-loop(times)
 // Print: BasilC-say()
 // Set Printing Color: BasilC-tint(red)
 // Label/Goto: BasilC-label(name), BasilC-goto(name)
@@ -24,6 +24,7 @@
 // If: BasilC-if(condition)
 // Endif: BasilC-endif()
 // Define variables: BasilC-define(var_name, var_data)
+// End Program: BasilC-end()
 
 stack_node_t *root;
 stack_node_t *current_stack;
@@ -33,16 +34,32 @@ variable_stack_node_t *root_var;
 variable_stack_node_t *current_var_stack;
 
 bool in_block;
+bool monochrome_mode = false;
+bool hide_debugging = false;
 
 int32_t main(int32_t argc, char **argv) {
     // Verify arguments
-    if (argc != 2) {
-        printf("Usage: %s <script.basilc>\n", argv[0]);
+    if (argc < 2 || argc > 4) {
+        printf("Usage: %s [-m] [-d] <script.basilc>\n", argv[0]);
         return 1;
     }
 
     // Set global variables
     in_block = false;
+
+    // Check parameters
+    extern int optind;
+    int c;
+
+    while ((c = getopt(argc, argv, "md")) != -1)
+    switch (c){
+        case 'm':
+            monochrome_mode = true; //don't output ANSI color codes
+            break;
+        case 'd':
+            fclose(stderr); //don't show debugging and error info
+            break;
+    }
 
     // Create initial stack
     root = (stack_node_t *) malloc(sizeof(stack_node_t));
@@ -55,7 +72,7 @@ int32_t main(int32_t argc, char **argv) {
 
     // Open script file
     FILE *fp;
-    fp = fopen(argv[1], "r");
+    fp = fopen(argv[optind], "r");
     if (fp == NULL) {
         perror("Error");
         return 1;
@@ -118,6 +135,10 @@ int32_t main(int32_t argc, char **argv) {
 
     // Execute stack
     stack_execute();
+
+    // Reset terminal colors
+    printANSIescape("\033[0m");
+
 }
 
 // Intialize an empty stack node
@@ -327,23 +348,6 @@ void parse_line(char *line, int32_t line_len, int32_t linenum) {
         goto advance_stack;
     }
 
-    // Check sayvar()
-    if (line_len >= 14 && strncmp(line, "BasilC-sayvar(", 14) == 0) { // Make sure arguments are closed
-        if (line[line_len-1] != ')') {
-            goto parse_fail;
-        }
-
-        // Add to stack
-        current_stack->command = "sayvar";
-        // If parameter is specified, add it
-        if (line_len > 15) {
-            strncpy(current_stack->parameters[0], line+14, line_len-15);
-        } else {
-            goto parse_fail;
-        }
-        goto advance_stack;
-    }
-
     // Check end()
     if (strcmp(line, "BasilC-end()") == 0) {
         current_stack->command = "end";
@@ -428,25 +432,25 @@ void stack_execute() {
             /* prints ANSI escape code to allow the following BasilC-say
             statement to be in the corresponding color */
             if (strcmp(temp, "black") == 0)
-                printf("\033[30m");
+                printANSIescape("\033[30m");
             else if (strcmp(temp, "red") == 0)
-                printf("\033[31m");
+                printANSIescape("\033[31m");
             else if (strcmp(temp, "green") == 0)
-                printf("\033[32m");
+                printANSIescape("\033[32m");
             else if (strcmp(temp, "yellow") == 0)
-                printf("\033[33m");
+                printANSIescape("\033[33m");
             else if (strcmp(temp, "blue") == 0)
-                printf("\033[34m");
+                printANSIescape("\033[34m");
             else if (strcmp(temp, "magenta") == 0)
-                printf("\033[35m");
+                printANSIescape("\033[35m");
             else if (strcmp(temp, "cyan") == 0)
-                printf("\033[36m");
+                printANSIescape("\033[36m");
             else if (strcmp(temp, "white") == 0)
-                printf("\033[37m");
+                printANSIescape("\033[37m");
             /* if the color is not one of the available options, reset
             terminal to default color state */
             else
-                printf("\033[0m");
+                printANSIescape("\033[0m");
             goto loop_next;
         }
 
@@ -519,17 +523,7 @@ void stack_execute() {
 
             goto loop_next;
         }
-
-        // sayvar()
-        if (strcmp(cur->command, "sayvar") == 0) {
-            char *temp = get_data_for_var(cur->parameters[0]);
-            if (temp != NULL) {
-                printf("%s\n", temp);
-                goto loop_next;
-            }
-            printf("null\n");
-            goto loop_next;
-        }
+        
         // end()
         if (strcmp(cur->command, "end") == 0){
             return;
@@ -540,7 +534,7 @@ void stack_execute() {
             variable_stack_node_t *temp_var = var_stack_search_label(cur->parameters[1]);
             if (temp_var != NULL){
                 printf("%s", cur->parameters[0]);
-                fgets(temp_var->data, 70, stdin);
+                fgets(temp_var->data, STACK_PARAMETER_MAX_LENGTH, stdin);
                 temp_var->data[strlen(temp_var->data)-1] = '\0'; //screw newlines
             }
             else printf("Variable %s has not been declared!", cur->parameters[0]);
@@ -717,4 +711,10 @@ char * parse_var_string(char *str) {
     // Get final parsed string
     sprintf(buf, formatstr, var_values);
     return buf;
+}
+
+// wrapper around printf for ANSI escape codes
+void printANSIescape(char *code){
+    if (!monochrome_mode)
+        printf("%s", code);
 }

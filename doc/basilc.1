@@ -1,0 +1,24 @@
+.TH basilc 1  "July 15, 2016" "version 1.0" "USER COMMANDS"
+.SH NAME
+basilc \- An interpreter for the BasilC esoteric programming language
+.SH SYNOPSIS
+.B basilc
+[\-m] [\-d] file
+.SH DESCRIPTION
+BasilC is an esoteric interpreted programming language aimed at rapid development and deployment. BasilC introduces the new programming paradigm of procedural non-typed languages.
+.SH OPTIONS
+.TP
+\-m
+enables monochrome mode. This disables ANSI terminal escape codes
+.TP
+\-d
+disables debugging and error output while interpreting a .basilc script
+.PP
+.SH COMMANDS
+.TP
+BasilC#// \- Single line comment, interpreter ignores everything after this until the next line.
+.TP
+BasilC-naptime(n) \- Sleep for n seconds
+.TP
+.SH INTERNET RESOURCES
+https://github.com/shawnanastasio/BasilC

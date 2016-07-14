@@ -5,6 +5,7 @@ PREFIX=/usr/local
 SRCDIR=src
 INCLUDEDIR=include
 OUTDIR=out
+MANDIR=doc
 DEPS=$(SRCDIR)/stringhelpers.o
 
 .PHONY: all
@@ -27,9 +28,11 @@ clean:
 install: BasilC
 	mkdir -p $(DESTDIR)$(PREFIX)/bin
 	cp $(OUTDIR)/basilc $(DESTDIR)$(PREFIX)/bin/basilc
+	cp $(MANDIR)/basilc.1 $(DESTDIR)$(PREFIX)/man/basilc.1
 	@echo Finished Installing!
 
 .PHONY: uninstall
 uninstall:
 	rm -f $(DESTDIR)$(PREFIX)/bin/basilc
+	rm -f $(DESTDIR)$(PREFIX)/man/basilc.1
 	@echo Finished Uninstalling!

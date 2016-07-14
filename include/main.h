@@ -36,3 +36,4 @@ void exit_with_error(char *error);
 char * get_data_for_var(char *var_name);
 void prepare_var_string(char *str, int32_t num_vars);
 char * parse_var_string(char *str);
+void printANSIescape(char *code);
