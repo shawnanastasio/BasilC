@@ -6,7 +6,9 @@ SRCDIR=src
 INCLUDEDIR=include
 OUTDIR=out
 MANDIR=doc
-DEPS=$(SRCDIR)/stringhelpers.o
+DEPS=$(SRCDIR)/stringhelpers.o $(SRCDIR)/cmd.o
+
+include $(SRCDIR)/libbasilc/make.config
 
 .PHONY: all
 all: pre-build BasilC

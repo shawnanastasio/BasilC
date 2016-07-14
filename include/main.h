@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #define STACK_PARAMETER_MAX_AMOUNT 5 // Max parameters a command can have
 #define STACK_PARAMETER_MAX_LENGTH 100 // Max length of a parameter
@@ -23,6 +24,15 @@ struct variable_stack_node {
 
 typedef struct stack_node stack_node_t;
 typedef struct variable_stack_node variable_stack_node_t;
+
+extern stack_node_t *root;
+extern stack_node_t *current_stack;
+extern variable_stack_node_t *root_var;
+extern variable_stack_node_t *current_var_stack;
+
+extern bool in_block;
+extern bool monochrome_mode;
+extern bool hide_debugging;
 
 void stack_node_initialize(struct stack_node *s);
 void parse_line(char *line, int line_len, int linenum);

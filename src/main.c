@@ -14,6 +14,8 @@
 
 #include <main.h>
 #include <stringhelpers.h>
+#include <cmd.h>
+#include <libbasilc/libbasilc.h>
 
 // Comments: BasilC#// (comment)
 // Print: BasilC-say()
@@ -30,12 +32,11 @@ stack_node_t *root;
 stack_node_t *current_stack;
 
 variable_stack_node_t *root_var;
-// Must always point to latest empty node
 variable_stack_node_t *current_var_stack;
 
 bool in_block;
-bool monochrome_mode = false;
-bool hide_debugging = false;
+bool monochrome_mode;
+bool hide_debugging;
 
 int32_t main(int32_t argc, char **argv) {
     // Verify arguments
@@ -46,6 +47,14 @@ int32_t main(int32_t argc, char **argv) {
 
     // Set global variables
     in_block = false;
+    monochrome_mode = false;
+    hide_debugging = false;
+
+    // Initialize command stack
+    init_cmd_stack();
+
+    // Register libbasilc functions
+    libbasilc_register();
 
     // Check parameters
     int32_t c;
@@ -163,11 +172,17 @@ void parse_line(char *line, int32_t line_len, int32_t linenum) {
     // Skip empty string
     if (line_len == 0) return;
 
-    //printf("PARSE LINE: %s\n", line);
-    //printf("line_len: %d\n", line_len);
-
     //ignore shebang lines
     if (line[0]=='#') return;
+
+    // Check comment
+    if (line_len >= 9 && strncmp(line, "BasilC#//", 9) == 0) {
+        return;
+    }
+
+    // Pass line to parser
+    bool result = parse_user_command(line, line_len);
+    if (result) return;
 
     // Parse line of code
     if (line_len <= 6) {
@@ -175,11 +190,6 @@ void parse_line(char *line, int32_t line_len, int32_t linenum) {
         goto parse_fail;
     } if (strncmp(line, "BasilC", 6) != 0) {
         goto parse_fail;
-    }
-
-    // Check comment
-    if (line_len >= 9 && strncmp(line, "BasilC#//", 9) == 0) {
-        return;
     }
 
     // Check say()
@@ -347,12 +357,6 @@ void parse_line(char *line, int32_t line_len, int32_t linenum) {
             goto parse_fail;
         }
 
-        goto advance_stack;
-    }
-
-    // Check end()
-    if (strcmp(line, "BasilC-end()") == 0) {
-        current_stack->command = "end";
         goto advance_stack;
     }
 
