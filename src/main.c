@@ -110,7 +110,8 @@ int32_t main(int32_t argc, char **argv) {
 
     int32_t line_len = 0;
     int32_t pos = 0;
-    for (int32_t i=0; i<lines; i++) {
+    int32_t i;
+    for (i=0; i<lines; i++) {
         // Get line length
         while (buffer[pos+line_len] && buffer[pos+line_len] != '\n') {
             ++line_len;
@@ -145,8 +146,9 @@ int32_t main(int32_t argc, char **argv) {
 void stack_node_initialize(stack_node_t *s) {
     s->command = NULL;
     s->execute = true;
-    for (int32_t i=0; i<STACK_PARAMETER_MAX_AMOUNT; i++) {
-        for (int32_t z=0; z<STACK_PARAMETER_MAX_LENGTH; z++) {
+    int32_t i, z;
+    for (i=0; i<STACK_PARAMETER_MAX_AMOUNT; i++) {
+        for (z=0; z<STACK_PARAMETER_MAX_LENGTH; z++) {
             s->parameters[i][z] = 0;
         }
     }
@@ -523,7 +525,7 @@ void stack_execute() {
 
             goto loop_next;
         }
-        
+
         // end()
         if (strcmp(cur->command, "end") == 0){
             return;
@@ -535,7 +537,7 @@ void stack_execute() {
             if (temp_var != NULL){
                 printf("%s", cur->parameters[0]);
                 fgets(temp_var->data, STACK_PARAMETER_MAX_LENGTH, stdin);
-                temp_var->data[strlen(temp_var->data)-1] = '\0'; //screw newlines
+                temp_var->data[strlen(temp_var->data)-1] = '\0';
             }
             else printf("Variable %s has not been declared!", cur->parameters[0]);
         }
