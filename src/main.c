@@ -169,235 +169,17 @@ void parse_line(char *line, int32_t line_len, int32_t linenum) {
     // Remove trailing \n
     if (line[--line_len] == '\n') line[line_len] = '\0';
 
-    // Skip empty string
-    if (line_len == 0) return;
-
-    //ignore shebang lines
-    if (line[0]=='#') return;
-
-    // Check comment
-    if (line_len >= 9 && strncmp(line, "BasilC#//", 9) == 0) {
+    // Pass line to parser
+    int32_t result = parse_user_command(line, line_len);
+    if (result != ERR_SUCCESS) {
+        printf("Error: %s\n", parse_error_msgs[result]);
+    } else {
         return;
     }
 
-    // Pass line to parser
-    bool result = parse_user_command(line, line_len);
-    if (result) return;
-
-    // Parse line of code
-    if (line_len <= 6) {
-        // All BasilC code is prefixed with "BasilC"; line length must be > 6
-        goto parse_fail;
-    } if (strncmp(line, "BasilC", 6) != 0) {
-        goto parse_fail;
-    }
-
-    // Check say()
-    if (line_len >= 11 && strncmp(line, "BasilC-say(", 11) == 0) {
-        // Make sure arguments are closed
-        if (line[line_len-1] != ')') {
-            goto parse_fail;
-        }
-
-        // Add to stack
-        current_stack->command = "say";
-        // If parameter is specified, add it
-        if (line_len > 11+1) {
-            strncpy(current_stack->parameters[0], line+11, line_len-11-1);
-        }
-
-        goto advance_stack;
-    }
-
-    /*
-     * Check tint()
-	 * The tint() function changes the text color to one of 8 ANSI terminal
-	 * colors (TODO: add Bright versions of these colors)
-	 */
-    if (line_len >= 12 && strncmp(line, "BasilC-tint(", 12) == 0) {
-        // Make sure arguments are closed
-        if (line[line_len-1] != ')') {
-            goto parse_fail;
-        }
-
-        // Add to stack
-        current_stack->command = "tint";
-        // If parameter is specified, add it
-        if (line_len > 12+1) {
-            strncpy(current_stack->parameters[0], line+12, line_len-12-1);
-        }
-
-        goto advance_stack;
-    }
-
-    // Check label()
-    if (line_len >= 13 && strncmp(line, "BasilC-label(", 13) == 0) {
-        // Make sure arguments are closed
-        if (line[line_len-1] != ')') {
-            goto parse_fail;
-        }
-
-        // Add to stack
-        current_stack->command = "label";
-        // If parameter is specified, add it
-        if (line_len > 13+1) {
-            strncpy(current_stack->parameters[0], line+13, line_len-13-1);
-        } else {
-            goto parse_fail;
-        }
-
-        goto advance_stack;
-    }
-
-    // Check goto()
-    if (line_len >= 12 && strncmp(line, "BasilC-goto(", 12) == 0) {
-        // Make sure arguments are closed
-        if (line[line_len-1] != ')') {
-            goto parse_fail;
-        }
-
-        // Add to stack
-        current_stack->command = "goto";
-        // If parameter is specified, add it
-        if (line_len > 12+1) {
-            strncpy(current_stack->parameters[0], line+12, line_len-12-1);
-        } else {
-            goto parse_fail;
-        }
-
-        goto advance_stack;
-    }
-
-    // Check yolo()
-    if (line_len >= 12 && strncmp(line, "BasilC-yolo(", 12) == 0) {
-        // Make sure arguments are closed
-        if (line[line_len-1] != ')') {
-            goto parse_fail;
-        }
-
-        // Add to stack
-        current_stack->command = "yolo";
-        // If parameter is specified, add it
-        if (line_len > 12+1) {
-            strncpy(current_stack->parameters[0], line+12, line_len-12-1);
-        } else {
-            goto parse_fail;
-        }
-
-        goto advance_stack;
-    }
-
-    // Check naptime()
-    if (line_len >= 15 && strncmp(line, "BasilC-naptime(", 15) == 0) {
-        // Make sure arguments are closed
-        if (line[line_len-1] != ')') {
-            goto parse_fail;
-        }
-
-        // Add to stack
-        current_stack->command = "naptime";
-        // If parameter is specified, add it
-        if (line_len > 15+1) {
-            strncpy(current_stack->parameters[0], line+15, line_len-15-1);
-        } else {
-            goto parse_fail;
-        }
-
-        goto advance_stack;
-    }
-
-    // Check if()
-    if (line_len >= 10 && strncmp(line, "BasilC-if(", 10) == 0) {
-        // Make sure arguments are closed
-        if (line[line_len-1] != ')') {
-            goto parse_fail;
-        }
-
-        // Add to stack
-        current_stack->command = "if";
-        // Store condition in parameters
-        if (line_len > 10+1) {
-            strncpy(current_stack->parameters[0], line+10, line_len-10-1);
-            // Mark start of code block
-            in_block = true;
-        } else {
-            goto parse_fail;
-        }
-
-        goto advance_stack;
-    }
-
-    // Check endif()
-    if (line_len == 14 && strncmp(line, "BasilC-endif()", 14) == 0) {
-        if (in_block) {
-            in_block = false;
-            current_stack->command = "endif";
-        }
-        else goto parse_fail;
-
-        goto advance_stack;
-    }
-
-    // Check define()
-    if (line_len >= 14 && strncmp(line, "BasilC-define(", 14) == 0) {
-        if (line[line_len-1] != ')') {
-            goto parse_fail;
-        }
-
-        // Add to stack
-        current_stack->command = "define";
-        // If size and parameters are correct
-        if (line_len > 10+1 && str_index_of(line, ",") > -1) {
-            int32_t comma = str_index_of(line, ",");
-            //printf("line_len: %d\ncomma: %d\n", line_len, comma);
-            strncpy(current_stack->parameters[0], line+14, comma-14);
-            strncpy(current_stack->parameters[1], line+comma+2, line_len-comma-3);
-            goto advance_stack;
-        } else {
-            goto parse_fail;
-        }
-
-        goto advance_stack;
-    }
-
-    // Check ask()
-    if (line_len >= 11 && strncmp(line, "BasilC-ask(", 11) == 0) {
-        // Make sure arguments are closed
-        if (line[line_len-1] != ')') {
-            goto parse_fail;
-        }
-
-        // Add to stack
-        current_stack->command = "ask";
-         if (line_len > 12){
-            int32_t comma = str_index_of(line, ",");
-            if (comma < 12) {
-                goto parse_fail;
-            }
-
-            //printf("line_len: %d\ncomma: %d\n", line_len, comma);
-
-            strncpy(current_stack->parameters[0], line+11, comma-11);
-            strncpy(current_stack->parameters[1], line+comma+2, line_len-comma-3);
-            goto advance_stack;
-        }
-        else {
-            goto parse_fail;
-        }
-    }
-
 parse_fail:
-    fprintf(stderr, "Invalid command\n");
     fprintf(stderr, "At line %d: %s\n", linenum, line);
     exit(1);
-    return;
-
-advance_stack:
-    if (strncmp(current_stack->command, "if", 2) != 0)
-        current_stack->execute = !in_block;
-    current_stack->next = malloc(sizeof(stack_node_t));
-    stack_node_initialize(current_stack->next);
-    current_stack = current_stack->next;
     return;
 }
 
@@ -410,147 +192,16 @@ void parse_cleanup() {
 
 void stack_execute() {
     stack_node_t *cur = root;
-    while (cur != NULL) {
-        // Handle commands
-        if (cur->command == NULL) goto loop_next;
-
-        // Handle nodes marked as "don't execute"
-        if (cur->execute == false) goto loop_next;
-
-        // say()
-        if (strcmp(cur->command, "say") == 0) {
-            char *temp = cur->parameters[0];
-            // Try to parse variables in string
-            char *parsed = parse_var_string(temp);
-            if (parsed != NULL) {
-                // If variables were parsed successfully
-                printf("%s\n", parsed);
-                free(parsed);
-                goto loop_next;
-            }
-            printf("%s\n", temp);
-            goto loop_next;
+    while (cur->next != NULL) {
+        // Pass stack node to handler
+        int32_t result = execute_command(&cur);
+        if (result) {
+            continue;
+        } else {
+            char error[80];
+            sprintf(error, "Failed to execute command: %s", cur->command);
+            exit_with_error(error);
         }
-
-        // tint()
-        if (strcmp(cur->command, "tint") == 0) {
-            char *temp = cur->parameters[0];
-            /* prints ANSI escape code to allow the following BasilC-say
-            statement to be in the corresponding color */
-            if (strcmp(temp, "black") == 0)
-                printANSIescape("\033[30m");
-            else if (strcmp(temp, "red") == 0)
-                printANSIescape("\033[31m");
-            else if (strcmp(temp, "green") == 0)
-                printANSIescape("\033[32m");
-            else if (strcmp(temp, "yellow") == 0)
-                printANSIescape("\033[33m");
-            else if (strcmp(temp, "blue") == 0)
-                printANSIescape("\033[34m");
-            else if (strcmp(temp, "magenta") == 0)
-                printANSIescape("\033[35m");
-            else if (strcmp(temp, "cyan") == 0)
-                printANSIescape("\033[36m");
-            else if (strcmp(temp, "white") == 0)
-                printANSIescape("\033[37m");
-            /* if the color is not one of the available options, reset
-            terminal to default color state */
-            else
-                printANSIescape("\033[0m");
-            goto loop_next;
-        }
-
-        // goto()
-        if (strcmp(cur->command, "goto") == 0) {
-            char *temp = cur->parameters[0];
-            stack_node_t *label = stack_search_label(temp);
-            if (label != NULL) {
-                cur = label;
-                goto loop_skip;
-            }
-        }
-
-        // yolo()
-        if (strcmp(cur->command, "yolo") == 0) {
-            char *temp = cur->parameters[0];
-            system(temp);
-            goto loop_next;
-        }
-
-        // naptime()
-        if (strcmp(cur->command, "naptime") == 0) {
-            char *temp = cur->parameters[0];
-            sleep(atoi(temp));
-            goto loop_next;
-        }
-
-        // if()
-        if (strcmp(cur->command, "if") == 0) {
-            char *temp = cur->parameters[0];
-            bool cond;
-
-            // Try to parse variables in string
-            char *parsed = parse_var_string(temp);
-            if (parsed != NULL) {
-                // If variables were parsed successfully
-                cond = eval_conditional(parsed);
-                free(parsed);
-            } else {
-                cond = eval_conditional(temp);
-            }
-
-            // If condition is true, mark all commands in block as execute
-            if (cond)
-                set_block_execute(cur, true);
-            goto loop_next;
-        }
-
-        // define()
-        if (strcmp(cur->command, "define") == 0) {
-            char *var_name = cur->parameters[0];
-            char *var_data = cur->parameters[1];
-
-            // Check if variable already exists
-            variable_stack_node_t *var = var_stack_search_label(var_name);
-            if (var != NULL) {
-                // Redefine variable
-                strcpy(var->data, var_data);
-                goto loop_next;
-            }
-
-            // Add to variable stack
-            strcpy(current_var_stack->name, var_name);
-            strcpy(current_var_stack->data, var_data);
-
-            // Advance variable stack
-            current_var_stack->next = (variable_stack_node_t *)
-                                      malloc(sizeof(variable_stack_node_t));
-            current_var_stack = current_var_stack->next;
-
-            goto loop_next;
-        }
-
-        // end()
-        if (strcmp(cur->command, "end") == 0){
-            return;
-        }
-
-        // ask()
-        if (strcmp(cur->command, "ask") == 0){
-            variable_stack_node_t *temp_var = var_stack_search_label(cur->parameters[1]);
-            if (temp_var != NULL){
-                printf("%s", cur->parameters[0]);
-                fgets(temp_var->data, STACK_PARAMETER_MAX_LENGTH, stdin);
-                temp_var->data[strlen(temp_var->data)-1] = '\0';
-            }
-            else printf("Variable %s has not been declared!", cur->parameters[0]);
-        }
-
-    loop_next:
-        cur = cur->next;
-
-    loop_skip:
-        cur = cur; // Make C compiler happy
     }
 }
 
@@ -683,6 +334,7 @@ void prepare_var_string(char *str, int32_t num_vars) {
 char * parse_var_string(char *str) {
     // Get number of variables
     int32_t num_vars = get_char_occurances(str, "$");
+    if (num_vars == 0) return NULL;
 
     // Determine size of buffer
     int32_t bufsize = strlen(str) + (MAX_DATA_SIZE * num_vars) - num_vars;
