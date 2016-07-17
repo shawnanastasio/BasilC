@@ -13,6 +13,7 @@
  #include <stdlib.h>
  #include <string.h>
  #include <stdio.h>
+ #include <ctype.h>
 
  #include <main.h>
  #include <cmd.h>
@@ -21,40 +22,70 @@
 bool basilc_say_callback(stack_node_t **node) {
     char *parsed = parse_var_string((*node)->parameters[0]);
     if (parsed != NULL) {
-        printf("%s\n", parsed);
+        printf("%s", parsed);
         free(parsed);
     } else {
-        printf("%s\n", (*node)->parameters[0]);
+        printf("%s", (*node)->parameters[0]);
     }
     return true;
+}
+
+// Handle execution of BasilC-sayln()
+bool basilc_sayln_callback(stack_node_t **node) {
+   basilc_say_callback(node);
+   printf("\n");
+   return true;
+}
+
+//shared code used by tint() and tintbg()
+void basilc_handle_tint(char code, char *temp){
+  /* prints ANSI escape code to allow the following BasilC-say
+  statement to be in the corresponding color */
+  if (monochrome_mode)
+      return;
+  if (strcmp(temp, "black") == 0)
+      printf("\033[%c0m", code);
+  else if (strcmp(temp, "red") == 0)
+      printf("\033[%c1m", code);
+  else if (strcmp(temp, "green") == 0)
+      printf("\033[%c2m", code);
+  else if (strcmp(temp, "yellow") == 0)
+      printf("\033[%c3m", code);
+  else if (strcmp(temp, "blue") == 0)
+      printf("\033[%c4m", code);
+  else if (strcmp(temp, "magenta") == 0)
+      printf("\033[%c5m", code);
+  else if (strcmp(temp, "cyan") == 0)
+      printf("\033[%c6m", code);
+  else if (strcmp(temp, "white") == 0)
+      printf("\033[%c7m", code);
+  /* if the color is not one of the available options, reset
+  terminal to default color state */
+  else
+      printANSIescape("\033[0m");
 }
 
 // Handle execution of BasilC-tint()
 bool basilc_tint_callback(stack_node_t **node) {
     char *temp = (*node)->parameters[0];
+    int32_t i;
+    for (i=0; temp[i]; i++){
+        temp[i] = tolower(temp[i]);
+    }
     /* prints ANSI escape code to allow the following BasilC-say
     statement to be in the corresponding color */
-    if (strcmp(temp, "black") == 0)
-        printANSIescape("\033[30m");
-    else if (strcmp(temp, "red") == 0)
-        printANSIescape("\033[31m");
-    else if (strcmp(temp, "green") == 0)
-        printANSIescape("\033[32m");
-    else if (strcmp(temp, "yellow") == 0)
-        printANSIescape("\033[33m");
-    else if (strcmp(temp, "blue") == 0)
-        printANSIescape("\033[34m");
-    else if (strcmp(temp, "magenta") == 0)
-        printANSIescape("\033[35m");
-    else if (strcmp(temp, "cyan") == 0)
-        printANSIescape("\033[36m");
-    else if (strcmp(temp, "white") == 0)
-        printANSIescape("\033[37m");
-    /* if the color is not one of the available options, reset
-    terminal to default color state */
-    else
-        printANSIescape("\033[0m");
+    basilc_handle_tint('3', temp);
+    return true;
+}
 
+// Handle execution of BasilC-tintbg()
+bool basilc_tintbg_callback(stack_node_t **node) {
+    char *temp = (*node)->parameters[0];
+    int32_t i;
+    for (i=0; temp[i]; i++){
+        temp[i] = tolower(temp[i]);
+    }
+    basilc_handle_tint('4', temp);
     return true;
 }
 

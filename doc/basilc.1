@@ -3,7 +3,7 @@
 basilc \- An interpreter for the BasilC esoteric programming language
 .SH SYNOPSIS
 .B basilc
-[\-m] [\-d] file
+[\-m] [\-d] [\-t] file
 .SH DESCRIPTION
 BasilC is an esoteric interpreted programming language aimed at rapid development and deployment. BasilC introduces the new programming paradigm of procedural non-typed languages. Please visit the examples directory of the source code to view example programs written in BasilC.
 .SH OPTIONS
@@ -13,6 +13,9 @@ enables monochrome mode. This disables ANSI terminal escape codes
 .TP
 \-d
 disables debugging and error output while interpreting a .basilc script
+.TP
+\-t
+shows the total time elapsed in seconds from the start of the BasilC interpreter to the completion of the running .basilc script
 .PP
 .SH COMMANDS
 Please note that the BasilC- prefix is fully optional in recent versions of the BasilC interpreter!
@@ -37,7 +40,11 @@ BasilC-naptime(n) \- Sleep for n seconds
 .TP
 BasilC-say(Hello $World) \- Prints out the given text to the terminal, substituting any word prefaced by a $ with the value of the variable named so
 .TP
-BasilC-tint(color) \- Sets the terminal printing color to the one specified, does nothing if monochrome mode option [-m] is set, see SUPPORTED COLORS in the APPENDIX for a list of supported colors. If an invalid color is specified, such as RESET, then the terminal is reset to its original color scheme. This reset occurs at the end of a program's execution
+BasilC-sayln(Hello $World) \- Prints out the given text as BasilC-say() does, starting a newline after the printed text
+.TP
+BasilC-tint(color) \- Sets the terminal foreground printing color to the one specified, does nothing if monochrome mode option [-m] is set, see SUPPORTED COLORS in the APPENDIX for a list of supported colors. If an invalid color is specified, such as RESET, then the terminal is reset to its original color scheme. This reset occurs at the end of a program's execution
+.TP
+BasilC-tintbg(color) \- Sets the terminal background printing color in a manner similar to BasilC-tint()
 .TP
 BasilC-yolo(command) \- Executes the given command in the host shell. Please note that this can allow malicious commands and/or code to be run, and use this command with caution
 .PP
@@ -47,7 +54,7 @@ BasilC-yolo(command) \- Executes the given command in the host shell. Please not
 There are two ways to execute BasilC programs, the first way is to use the `basilc` command to run a program as specified in the SYNOPSIS section. The second way is to prepend a shebang line to the BasilC program source file, then to allow the file to be executed (chmod +x), and then to run the source file with `./example.basilc`. An example shebang line is `#!/usr/local/bin/basilc`, which will allow the source file to execute itself as long as the interpreter has been installed to your PATH during installation
 .TP
 .SH II: SUPPORTED COLORS
-black red green yellow blue magenta cyan white 
+black red green yellow blue magenta cyan white
 .PP
 .SH INTERNET RESOURCES
 https://github.com/shawnanastasio/BasilC

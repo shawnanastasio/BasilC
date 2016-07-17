@@ -16,7 +16,7 @@ To compile on UNIX-like systems with GNU Make, simply run:
 $ make
 ```
 
-If you wish to use shebang lines (such as the one in example.basilc) to execute BasilC programs as scripts, install the compiled binary to your path:
+If you wish to use shebang lines (such as the one in example.basilc) to execute BasilC programs as scripts, or if you wish to read the manpage with the man command, install the compiled binary to your path:
 ```
 $ sudo make install
 ```
@@ -29,6 +29,11 @@ Or, alternatively:
 ```
 $ chmod +x helloworld.basilc
 $ ./helloworld.basilc
+```
+
+Documentation is available in the manpage format, and it can be accessed with the following command: 
+```
+man basilc
 ```
 
 

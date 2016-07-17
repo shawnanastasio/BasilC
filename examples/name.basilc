@@ -2,7 +2,7 @@
 
 BasilC#// Basic console input program in BasilC
 BasilC-define(name, temp)
-BasilC-say(Hello my name is BasilC!)
+BasilC-sayln(Hello my name is BasilC!)
 BasilC-ask(What is your name?: , name)
-BasilC-say(Glad to meet you, $name)
+BasilC-sayln(Glad to meet you, $name)
 BasilC-end()

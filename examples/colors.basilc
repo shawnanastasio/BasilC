@@ -1,16 +1,17 @@
 #!/usr/local/bin/basilc
 BasilC#// ANSI color code test in BasilC
 
+BasilC-tintbg(cyan)
 BasilC-tint(red)
-BasilC-say(Color set to red!)
+BasilC-say(red )
 
-BasilC-tint(blue)
-BasilC-say(Color set to blue!)
+BasilC-tintbg(red)
+BasilC-tint(Blue)
+BasilC-say(Blue )
 
-BasilC-tint(yellow)
-BasilC-say(Color set to yellow!)
+BasilC-tintbg(black)
+BasilC-tint(YELLOW)
+BasilC-sayln(YELLOW)
 
 BasilC-tint(reset)
-BasilC-say(Colors reset to default!)
-
-
+BasilC-sayln(Colors reset!)

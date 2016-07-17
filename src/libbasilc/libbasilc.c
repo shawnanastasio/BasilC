@@ -30,7 +30,9 @@ void libbasilc_register() {
 
     /* Register io functions */
     register_cmd(&basilc_say);
+    register_cmd(&basilc_sayln);
     register_cmd(&basilc_tint);
+    register_cmd(&basilc_tintbg);
     register_cmd(&basilc_ask);
 
     /* Register system functions */

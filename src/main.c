@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <getopt.h>
+#include <time.h>
 
 #include <main.h>
 #include <stringhelpers.h>
@@ -37,10 +37,14 @@ variable_stack_node_t *current_var_stack;
 bool in_block;
 bool monochrome_mode;
 bool hide_debugging;
+bool show_timer;
 
 int32_t main(int32_t argc, char **argv) {
+    //start debug timer
+    clock_t start_timer = clock();
+
     // Verify arguments
-    if (argc < 2 || argc > 4) {
+    if (argc < 2 || argc > 5) {
         printf("Usage: %s [-m] [-d] <script.basilc>\n", argv[0]);
         return 1;
     }
@@ -49,6 +53,7 @@ int32_t main(int32_t argc, char **argv) {
     in_block = false;
     monochrome_mode = false;
     hide_debugging = false;
+    show_timer = false;
 
     // Initialize command stack
     init_cmd_stack();
@@ -60,13 +65,16 @@ int32_t main(int32_t argc, char **argv) {
     int32_t c;
     int32_t counter = 0;
 
-    while ((c = find_option(argc, argv, "md", &counter)) != -1)
+    while ((c = find_option(argc, argv, "mdt", &counter)) != -1)
     switch (c) {
         case 'm':
             monochrome_mode = true; //don't output ANSI color codes
             break;
         case 'd':
             fclose(stderr); //don't show debugging and error info
+            break;
+        case 't':
+            show_timer = true; //show elapse time
             break;
     }
 
@@ -149,6 +157,13 @@ int32_t main(int32_t argc, char **argv) {
     // Reset terminal colors
     printANSIescape("\033[0m");
 
+    // Print program execution time
+    clock_t end_timer = clock();
+    double execution_time = (double)(end_timer - start_timer) / CLOCKS_PER_SEC;
+    if (show_timer)
+        printf("\nExecution Time: %f seconds\n", execution_time);
+
+    return 0;
 }
 
 // Intialize an empty stack node
