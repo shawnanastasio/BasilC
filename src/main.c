@@ -119,7 +119,7 @@ int32_t main(int32_t argc, char **argv) {
         buffer[chars] = '\0';
     }
 
-    // DEBUG
+    // DEBUG BasilC(TM)
     fputs("BasilC Interpreter v1.0\n\n", stderr);
 
     // Begin parsing
